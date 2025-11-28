@@ -1,49 +1,43 @@
-from aiogram import Bot, Dispatcher, F
-from aiogram.types import Message
-from aiogram.enums import ChatMemberStatus
-import asyncio
+from aiogram import Bot, Dispatcher, types
+from aiogram.utils.executor import start_webhook
 
-TOKEN = "8581310157:AAE_PWKwEcBbRMFBPggxq-edTE76QAIQs9Y"
-CHANNEL_ID = -1002874954438  # ID канала, куда будут попадать нарушители
+API_TOKEN = "8581310157:AAE_PWKwEcBbRMFBPggxq-edTE76QAIQs9Y"
+WEBHOOK_HOST = "https://ваш-домен.com"
+WEBHOOK_PATH = "/webhook"
+WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
 
-bot = Bot(token=TOKEN)
-dp = Dispatcher()
+WEBAPP_HOST = "0.0.0.0"
+WEBAPP_PORT = 8080   # <-- ваш порт
 
-@dp.message(F.left_chat_member)
-async def on_user_left(message: Message):
+CHANNEL_ID = -1002874954438
+
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher(bot)
+
+@dp.message_handler(content_types=['left_chat_member'])
+async def on_user_left(message: types.Message):
     user = message.left_chat_member
 
-    # 1. Баним в группе
-    try:
-        await bot.ban_chat_member(
-            chat_id=message.chat.id,
-            user_id=user.id
-        )
-        print(f"User {user.id} was banned in group")
-    except Exception as e:
-        print("Ban error:", e)
+    await bot.kick_chat_member(message.chat.id, user.id)
 
-    # 2. Отправляем в канал уведомление
-    try:
-        await bot.send_message(
-            CHANNEL_ID,
-            f"Пользователь @{user.username} (ID: {user.id}) покинул группу и был забанен."
-        )
-    except Exception as e:
-        print("Channel post error:", e)
+    text = f"@{user.username} покинул и получил бан."
+    await bot.send_message(CHANNEL_ID, text)
 
-    # 3. Блокируем в канале (опционально)
-    try:
-        await bot.ban_chat_member(
-            chat_id=CHANNEL_ID,
-            user_id=user.id
-        )
-        print(f"User {user.id} blocked in channel")
-    except Exception as e:
-        print("Channel ban error:", e)
+    await message.delete()
 
-async def main():
-    await dp.start_polling(bot)
+
+async def on_startup(dp):
+    await bot.set_webhook(WEBHOOK_URL)
+
+async def on_shutdown(dp):
+    await bot.delete_webhook()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    start_webhook(
+        dispatcher=dp,
+        webhook_path=WEBHOOK_PATH,
+        on_startup=on_startup,
+        on_shutdown=on_shutdown,
+        host=WEBAPP_HOST,
+        port=WEBAPP_PORT,
+    )
