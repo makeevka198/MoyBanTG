@@ -2,9 +2,9 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.utils.executor import start_webhook
 
 API_TOKEN = "8581310157:AAE_PWKwEcBbRMFBPggxq-edTE76QAIQs9Y"
-WEBHOOK_HOST = "https://ваш-домен.com"
+WEBHOOK_HOST = "https://moybantg.onrender.com"
 WEBHOOK_PATH = "/webhook"
-WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
+WEBHOOK_URL = f"https://moybantg.onrender.com/webhook"
 
 WEBAPP_HOST = "0.0.0.0"
 WEBAPP_PORT = 8080   # <-- ваш порт
